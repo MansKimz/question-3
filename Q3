@@ -1,0 +1,54 @@
+//Server
+import socket
+
+def convert_to_atmosphere(pressure_bar):
+    return pressure_bar * 0.986923
+
+def main():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('192.168.200.128', 8000))
+    server_socket.listen(1)
+    print("Server is listening on port 8000...")
+
+    conn, addr = server_socket.accept()
+    print("Connected to client:", addr)
+
+    while True:
+        data = conn.recv(1024).decode('utf-8')
+        if not data:
+            break
+
+        try:
+            pressure_bar = float(data)
+            atmosphere_standard = convert_to_atmosphere(pressure_bar)
+            conn.sendall(str(atmosphere_standard).encode('utf-8'))
+            print(f"Received pressure: {pressure_bar} bar, Converted to atmosphere: {atmosphere_standard} atm")
+        except ValueError:
+            conn.sendall("Invalid input. Please enter a valid pressure value in bar.".encode('utf-8'))
+
+    conn.close()
+    server_socket.close()
+
+if __name__ == "__main__":
+    main()
+
+
+//Client
+
+import socket
+
+def main():
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(('192.168.200.128', 8000))
+
+    pressure_bar = input("Enter pressure value in bar: ")
+    client_socket.sendall(pressure_bar.encode('utf-8'))
+
+    atmosphere_standard = client_socket.recv(1024).decode('utf-8')
+    print(f"Received atmosphere value from server: {atmosphere_standard} atm")
+
+    client_socket.close()
+
+if __name__ == "__main__":
+    main()
+
